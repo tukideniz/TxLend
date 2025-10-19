@@ -8,7 +8,7 @@ const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || 'CDXDBMLM6NMKLTUQJOZU
 const RPC_URL = 'https://soroban-testnet.stellar.org'
 const NETWORK_PASSPHRASE = StellarSdk.Networks.TESTNET
 
-const server = new StellarSdk.SorobanRpc.Server(RPC_URL)
+const server = new StellarSdk.rpc.Server(RPC_URL)
 
 /**
  * Define Borrower - Eşyanın sorumluluğunu tanımla
@@ -43,12 +43,12 @@ export async function defineBorrower(
     // Transaction'ı simüle et
     const simulated = await server.simulateTransaction(tx)
     
-    if (StellarSdk.SorobanRpc.Api.isSimulationError(simulated)) {
+    if (StellarSdk.rpc.Api.isSimulationError(simulated)) {
       throw new Error(`Simulation failed: ${simulated.error}`)
     }
 
     // Prepare edilmiş transaction
-    const preparedTx = StellarSdk.SorobanRpc.assembleTransaction(tx, simulated).build()
+    const preparedTx = StellarSdk.rpc.assembleTransaction(tx, simulated).build()
 
     // Freighter ile imzala
     const signedXDR = await signTransaction(preparedTx.toXDR(), {
@@ -68,12 +68,11 @@ export async function defineBorrower(
     // Network'e gönder
     const result = await server.sendTransaction(signedTx as StellarSdk.Transaction)
     
-    console.log('✅ Transaction sent successfully!')
+    console.log('✅ I Lent It Transaction sent successfully!')
     console.log('Transaction Hash:', result.hash)
     console.log('Status:', result.status)
     
-    // Transaction gönderildi, hash'i dön
-    // Network işlemi birkaç saniye sürebilir ama transaction başarıyla gönderildi
+    // Write-Only Proof: Sadece TX Hash döndür
     return result.hash
   } catch (error) {
     console.error('defineBorrower error:', error)
@@ -109,11 +108,11 @@ export async function undefineBorrower(
 
     const simulated = await server.simulateTransaction(tx)
     
-    if (StellarSdk.SorobanRpc.Api.isSimulationError(simulated)) {
+    if (StellarSdk.rpc.Api.isSimulationError(simulated)) {
       throw new Error(`Simulation failed: ${simulated.error}`)
     }
 
-    const preparedTx = StellarSdk.SorobanRpc.assembleTransaction(tx, simulated).build()
+    const preparedTx = StellarSdk.rpc.assembleTransaction(tx, simulated).build()
 
     const signedXDR = await signTransaction(preparedTx.toXDR(), {
       network: 'TESTNET',
@@ -128,11 +127,11 @@ export async function undefineBorrower(
 
     const result = await server.sendTransaction(signedTx as StellarSdk.Transaction)
     
-    console.log('✅ Transaction sent successfully!')
+    console.log('✅ I Took It Back Transaction sent successfully!')
     console.log('Transaction Hash:', result.hash)
     console.log('Status:', result.status)
     
-    // Transaction gönderildi, hash'i dön
+    // Write-Only Proof: Sadece TX Hash döndür
     return result.hash
   } catch (error) {
     console.error('undefineBorrower error:', error)
@@ -140,56 +139,5 @@ export async function undefineBorrower(
   }
 }
 
-/**
- * Get Current Definition - Eşyanın mevcut sorumlusunu sorgula
- */
-export async function getCurrentDefinition(itemName: string): Promise<string | null> {
-  try {
-    const contract = new StellarSdk.Contract(CONTRACT_ID)
-    
-    // Dummy account (okuma işlemi için herhangi bir adres kullanılabilir)
-    const dummyAccount = new StellarSdk.Account(
-      'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF',
-      '0'
-    )
-
-    const tx = new StellarSdk.TransactionBuilder(dummyAccount, {
-      fee: StellarSdk.BASE_FEE,
-      networkPassphrase: NETWORK_PASSPHRASE,
-    })
-      .addOperation(
-        contract.call(
-          'get_current_definition',
-          StellarSdk.nativeToScVal(itemName, { type: 'symbol' }) // item_name
-        )
-      )
-      .setTimeout(30)
-      .build()
-
-    // Simüle et (okuma işlemi için yeterli)
-    const simulated = await server.simulateTransaction(tx)
-    
-    if (StellarSdk.SorobanRpc.Api.isSimulationError(simulated)) {
-      throw new Error(`Simulation failed: ${simulated.error}`)
-    }
-
-    if (!simulated.result) {
-      return null
-    }
-
-    // Sonucu decode et
-    const result = simulated.result.retval
-    
-    // Option<Address> tipini kontrol et
-    if (result.switch().name === 'scvVoid') {
-      return null
-    }
-
-    // Address'i string'e çevir
-    const address = StellarSdk.Address.fromScVal(result.value() as any)
-    return address.toString()
-  } catch (error) {
-    console.error('getCurrentDefinition error:', error)
-    return null
-  }
-}
+// Write-Only Proof System - Query fonksiyonları kaldırıldı
+// Sadece yazma işlemleri (define/undefine) kullanılacak
