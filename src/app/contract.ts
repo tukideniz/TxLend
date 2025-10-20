@@ -2,7 +2,7 @@
 import { signTransaction } from '@stellar/freighter-api'
 
 // Contract ID (Deployed to Stellar Testnet)
-const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || 'CDXDBMLM6NMKLTUQJOZUDAIKGAXPJKIEVEBIOIAJR5NMPK4X3C6IUXII'
+const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || 'CCU4KAUC6AFHKLQ7BP2HPW4VSXHEJVVQIXTE3IEH7J2JOPQPM2CGECQM'
 
 // Testnet RPC endpoint
 const RPC_URL = 'https://soroban-testnet.stellar.org'

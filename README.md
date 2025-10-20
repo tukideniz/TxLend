@@ -18,9 +18,9 @@ TxLend envisions a world where trust and responsibility in everyday interactions
 
 ## 👨‍💻 About Me
 
-**Name:** Blockchain Developer & Problem Solver
+**Rukiye Deniz YELKEN:** Computer Engineer
 
-As a passionate developer focused on practical blockchain applications, I believe that the true power of blockchain technology lies not in complex financial instruments, but in solving everyday problems that affect millions of people. My journey began with the realization that while most blockchain projects focus on DeFi and complex financial applications, there are countless real-world problems that can be elegantly solved with simple, secure, and immutable record-keeping.
+As a passionate developer focused on practical applications, I believe that the true power of blockchain technology lies not in complex financial instruments, but in solving everyday problems that affect millions of people. My journey began with the realization that while most blockchain projects focus on DeFi and complex financial applications, there are countless real-world problems that can be elegantly solved with simple, secure, and immutable record-keeping.
 
 TxLend represents my philosophy of "blockchain for everyone" - creating solutions that are so simple and useful that even non-technical users can benefit from the security and transparency that blockchain provides. I'm driven by the belief that technology should serve humanity, not the other way around, and that the best innovations often come from addressing the most basic human needs with the most advanced tools available.
 
@@ -71,6 +71,20 @@ npm run dev
 ```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## 🌐 Deployment
+
+**Contract Deployed to Stellar Testnet:**
+- **Contract ID:** `CCU4KAUC6AFHKLQ7BP2HPW4VSXHEJVVQIXTE3IEH7J2JOPQPM2CGECQM`
+- **Transaction Hash:** `028717fe3cda01c6545ed0ceec84ba3ddd7d4b1302fece1896e36d476b6ca6a9`
+- **Explorer:** https://stellar.expert/explorer/testnet/contract/CCU4KAUC6AFHKLQ7BP2HPW4VSXHEJVVQIXTE3IEH7J2JOPQPM2CGECQM
+
+**Environment Variables:**
+```bash
+NEXT_PUBLIC_CONTRACT_ID=CCU4KAUC6AFHKLQ7BP2HPW4VSXHEJVVQIXTE3IEH7J2JOPQPM2CGECQM
+NEXT_PUBLIC_RPC_URL=https://soroban-testnet.stellar.org
+NEXT_PUBLIC_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
+```
 
 ## 📱 How to Use
 
@@ -139,10 +153,10 @@ When the borrower returns your item:
 ## 🛠️ Technical Details
 
 ### Built With
-- **Frontend**: Next.js 14, React, TypeScript
+- **Frontend**: Next.js, TypeScript
 - **Blockchain**: Stellar Soroban smart contracts
 - **Wallet**: Freighter Wallet integration
-- **Styling**: Tailwind CSS
+
 
 ### Smart Contract Functions
 - `define_borrower`: Records who has borrowed an item
@@ -163,16 +177,40 @@ src/
 │   ├── layout.tsx        # App layout and metadata
 │   ├── contract.ts       # Smart contract interactions
 │   ├── globals.css       # Global styles
-│   └── icon.png          # App favicon
+│   ├── icon.png          # App favicon
+│   └── __tests__/        # Test files
+│       ├── contract.test.ts      # Unit tests
+│       ├── page.test.tsx         # Component tests
+│       └── integration.test.tsx  # Integration tests
 ├── contract/             # Smart contract source code
 └── public/               # Static assets
 ```
+
+### Testing
+
+TxLend includes testing with Jest and React Testing Library:
+
+- **Unit Tests**: Contract structure and documentation validation
+- **Component Tests**: React UI rendering and element presence
+- **Test Coverage**: ~18% with focus on critical code paths
+- **Test Files**: 20 passing tests across 2 test suites
+
+```bash
+npm test              # Run all tests
+npm run test:coverage # Run tests with coverage report
+```
+
+See [TESTING.md](./TESTING.md) for detailed testing documentation.
 
 ### Available Scripts
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm test` - Run test suite
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run test:ci` - Run tests for CI/CD
 
 ## 🌐 Deployment
 

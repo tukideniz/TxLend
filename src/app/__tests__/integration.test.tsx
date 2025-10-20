@@ -1,0 +1,430 @@
+import React from 'react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import Home from '../page'
+import { isConnected, requestAccess, signTransaction } from '@stellar/freighter-api'
+import { defineBorrower, undefineBorrower } from '../contract'
+
+// Mock the contract functions
+jest.mock('../contract', () => ({
+  defineBorrower: jest.fn(),
+  undefineBorrower: jest.fn(),
+}))
+
+// Mock Freighter API
+jest.mock('@stellar/freighter-api', () => ({
+  isConnected: jest.fn(),
+  requestAccess: jest.fn(),
+  signTransaction: jest.fn(),
+}))
+
+const mockDefineBorrower = defineBorrower as jest.MockedFunction<typeof defineBorrower>
+const mockUndefineBorrower = undefineBorrower as jest.MockedFunction<typeof undefineBorrower>
+const mockIsConnected = isConnected as jest.MockedFunction<typeof isConnected>
+const mockRequestAccess = requestAccess as jest.MockedFunction<typeof requestAccess>
+const mockSignTransaction = signTransaction as jest.MockedFunction<typeof signTransaction>
+
+describe('Integration Tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockIsConnected.mockResolvedValue(false)
+    mockRequestAccess.mockResolvedValue('GABC123...XYZ789')
+    mockDefineBorrower.mockResolvedValue('mock-tx-hash-123')
+    mockUndefineBorrower.mockResolvedValue('mock-tx-hash-456')
+  })
+
+  describe('Complete User Flow', () => {
+    it('should complete full lending workflow', async () => {
+      const user = userEvent.setup()
+      
+      // Start with disconnected wallet
+      mockIsConnected.mockResolvedValue(false)
+      render(<Home />)
+      
+      // Verify initial state
+      expect(screen.getByText('Wallet Connection Required')).toBeInTheDocument()
+      
+      // Connect wallet
+      mockIsConnected.mockResolvedValue(true)
+      const connectButton = screen.getByText(/Connect Wallet/)
+      await user.click(connectButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('✅ Wallet connected!')).toBeInTheDocument()
+        expect(screen.getByText('GABC123...XYZ789')).toBeInTheDocument()
+      })
+      
+      // Fill lending form
+      const itemNameInput = screen.getByLabelText('Item Name')
+      const borrowerAddressInput = screen.getByLabelText('Borrower Address (Public Key)')
+      
+      await user.type(itemNameInput, 'MacBook Pro')
+      await user.type(borrowerAddressInput, 'GDEF456...ABC123')
+      
+      // Submit lending transaction
+      const lendButton = screen.getByText('⤴ I Lent It')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(mockDefineBorrower).toHaveBeenCalledWith(
+          'GABC123...XYZ789',
+          'MacBook Pro',
+          'GDEF456...ABC123'
+        )
+        expect(screen.getByText(/✅ I lent MacBook Pro to GDEF456...ABC123/)).toBeInTheDocument()
+        expect(screen.getByText('🔗 Transaction Proof')).toBeInTheDocument()
+        expect(screen.getByText('mock-tx-hash-123')).toBeInTheDocument()
+      })
+      
+      // Verify form is cleared
+      expect(itemNameInput).toHaveValue('')
+      expect(borrowerAddressInput).toHaveValue('')
+    })
+
+    it('should complete full return workflow', async () => {
+      const user = userEvent.setup()
+      
+      // Start with connected wallet
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByText('GABC123...XYZ789')).toBeInTheDocument()
+      })
+      
+      // Fill return form
+      const itemNameInput = screen.getByLabelText('Item Name')
+      await user.type(itemNameInput, 'MacBook Pro')
+      
+      // Submit return transaction
+      const takeBackButton = screen.getByText('⤵ I Took It Back')
+      await user.click(takeBackButton)
+      
+      await waitFor(() => {
+        expect(mockUndefineBorrower).toHaveBeenCalledWith(
+          'GABC123...XYZ789',
+          'MacBook Pro'
+        )
+        expect(screen.getByText('✅ I took MacBook Pro back.')).toBeInTheDocument()
+        expect(screen.getByText('🔗 Transaction Proof')).toBeInTheDocument()
+        expect(screen.getByText('mock-tx-hash-456')).toBeInTheDocument()
+      })
+      
+      // Verify form is cleared
+      expect(itemNameInput).toHaveValue('')
+    })
+  })
+
+  describe('Error Recovery', () => {
+    it('should recover from wallet connection failure', async () => {
+      const user = userEvent.setup()
+      
+      // First attempt fails
+      mockRequestAccess.mockRejectedValueOnce(new Error('User declined'))
+      render(<Home />)
+      
+      const connectButton = screen.getByText('Connect Wallet')
+      await user.click(connectButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('❌ Wallet connection declined')).toBeInTheDocument()
+      })
+      
+      // Second attempt succeeds
+      mockRequestAccess.mockResolvedValueOnce('GABC123...XYZ789')
+      await user.click(connectButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('✅ Wallet connected!')).toBeInTheDocument()
+      })
+    })
+
+    it('should recover from transaction failure', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByLabelText('Item Name')).toBeInTheDocument()
+      })
+      
+      // First transaction fails
+      mockDefineBorrower.mockRejectedValueOnce(new Error('Insufficient balance'))
+      
+      const itemNameInput = screen.getByLabelText('Item Name')
+      const borrowerAddressInput = screen.getByLabelText('Borrower Address (Public Key)')
+      const lendButton = screen.getByText('⤴ I Lent It')
+      
+      await user.type(itemNameInput, 'Test Item')
+      await user.type(borrowerAddressInput, 'GDEF456...ABC123')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('❌ Transaction failed: Insufficient balance')).toBeInTheDocument()
+      })
+      
+      // Second transaction succeeds
+      mockDefineBorrower.mockResolvedValueOnce('mock-tx-hash-success')
+      
+      await user.type(itemNameInput, 'Test Item 2')
+      await user.type(borrowerAddressInput, 'GDEF456...ABC123')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText(/✅ I lent Test Item 2 to GDEF456...ABC123/)).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Multiple Transactions', () => {
+    it('should handle multiple lending transactions', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByLabelText('Item Name')).toBeInTheDocument()
+      })
+      
+      // First transaction
+      mockDefineBorrower.mockResolvedValueOnce('tx-hash-1')
+      
+      const itemNameInput = screen.getByLabelText('Item Name')
+      const borrowerAddressInput = screen.getByLabelText('Borrower Address (Public Key)')
+      const lendButton = screen.getByText('⤴ I Lent It')
+      
+      await user.type(itemNameInput, 'Laptop')
+      await user.type(borrowerAddressInput, 'GUSER1...ABC123')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText(/✅ I lent Laptop to GUSER1...ABC123/)).toBeInTheDocument()
+      })
+      
+      // Second transaction
+      mockDefineBorrower.mockResolvedValueOnce('tx-hash-2')
+      
+      await user.type(itemNameInput, 'Book')
+      await user.type(borrowerAddressInput, 'GUSER2...DEF456')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText(/✅ I lent Book to GUSER2...DEF456/)).toBeInTheDocument()
+        expect(screen.getByText('tx-hash-2')).toBeInTheDocument()
+      })
+    })
+
+    it('should handle multiple return transactions', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByLabelText('Item Name')).toBeInTheDocument()
+      })
+      
+      // First return
+      mockUndefineBorrower.mockResolvedValueOnce('return-tx-hash-1')
+      
+      const itemNameInput = screen.getByLabelText('Item Name')
+      const takeBackButton = screen.getByText('⤵ I Took It Back')
+      
+      await user.type(itemNameInput, 'Laptop')
+      await user.click(takeBackButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('✅ I took Laptop back.')).toBeInTheDocument()
+      })
+      
+      // Second return
+      mockUndefineBorrower.mockResolvedValueOnce('return-tx-hash-2')
+      
+      await user.type(itemNameInput, 'Book')
+      await user.click(takeBackButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('✅ I took Book back.')).toBeInTheDocument()
+        expect(screen.getByText('return-tx-hash-2')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Transaction Proof Management', () => {
+    it('should update transaction proof with latest transaction', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByLabelText('Item Name')).toBeInTheDocument()
+      })
+      
+      // First transaction
+      mockDefineBorrower.mockResolvedValueOnce('tx-hash-1')
+      
+      const itemNameInput = screen.getByLabelText('Item Name')
+      const borrowerAddressInput = screen.getByLabelText('Borrower Address (Public Key)')
+      const lendButton = screen.getByText('⤴ I Lent It')
+      
+      await user.type(itemNameInput, 'Item 1')
+      await user.type(borrowerAddressInput, 'GUSER1...ABC123')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('tx-hash-1')).toBeInTheDocument()
+      })
+      
+      // Second transaction should update the proof
+      mockDefineBorrower.mockResolvedValueOnce('tx-hash-2')
+      
+      await user.type(itemNameInput, 'Item 2')
+      await user.type(borrowerAddressInput, 'GUSER2...DEF456')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('tx-hash-2')).toBeInTheDocument()
+        expect(screen.queryByText('tx-hash-1')).not.toBeInTheDocument()
+      })
+    })
+
+    it('should clear transaction proof when requested', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByLabelText('Item Name')).toBeInTheDocument()
+      })
+      
+      // Create a transaction
+      mockDefineBorrower.mockResolvedValueOnce('tx-hash-1')
+      
+      const itemNameInput = screen.getByLabelText('Item Name')
+      const borrowerAddressInput = screen.getByLabelText('Borrower Address (Public Key)')
+      const lendButton = screen.getByText('⤴ I Lent It')
+      
+      await user.type(itemNameInput, 'Test Item')
+      await user.type(borrowerAddressInput, 'GUSER1...ABC123')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('🔗 Transaction Proof')).toBeInTheDocument()
+      })
+      
+      // Clear the proof
+      const clearButton = screen.getByText('✕ Clear')
+      await user.click(clearButton)
+      
+      expect(screen.queryByText('🔗 Transaction Proof')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Wallet State Management', () => {
+    it('should maintain wallet state across component re-renders', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      
+      const { rerender } = render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByText('GABC123...XYZ789')).toBeInTheDocument()
+      })
+      
+      // Re-render component
+      rerender(<Home />)
+      
+      // Wallet should still be connected
+      expect(screen.getByText('GABC123...XYZ789')).toBeInTheDocument()
+      expect(screen.getByText('Disconnect')).toBeInTheDocument()
+    })
+
+    it('should handle wallet disconnection and reconnection', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByText('GABC123...XYZ789')).toBeInTheDocument()
+      })
+      
+      // Disconnect wallet
+      const disconnectButton = screen.getByText('Disconnect')
+      await user.click(disconnectButton)
+      
+      expect(screen.getByText('Wallet disconnected')).toBeInTheDocument()
+      expect(screen.getByText('Connect Wallet')).toBeInTheDocument()
+      
+      // Reconnect wallet
+      const connectButton = screen.getByText('Connect Wallet')
+      await user.click(connectButton)
+      
+      await waitFor(() => {
+        expect(screen.getByText('✅ Wallet connected!')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Form Validation Integration', () => {
+    it('should validate form before submitting lending transaction', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByText('⤴ I Lent It')).toBeInTheDocument()
+      })
+      
+      const lendButton = screen.getByText('⤴ I Lent It')
+      
+      // Try to submit with empty fields
+      await user.click(lendButton)
+      
+      expect(screen.getByText('❌ Please fill all fields')).toBeInTheDocument()
+      expect(mockDefineBorrower).not.toHaveBeenCalled()
+      
+      // Fill only item name
+      const itemNameInput = screen.getByLabelText('Item Name')
+      await user.type(itemNameInput, 'Test Item')
+      await user.click(lendButton)
+      
+      expect(screen.getByText('❌ Please fill all fields')).toBeInTheDocument()
+      expect(mockDefineBorrower).not.toHaveBeenCalled()
+      
+      // Fill both fields
+      const borrowerAddressInput = screen.getByLabelText('Borrower Address (Public Key)')
+      await user.type(borrowerAddressInput, 'GUSER1...ABC123')
+      await user.click(lendButton)
+      
+      await waitFor(() => {
+        expect(mockDefineBorrower).toHaveBeenCalled()
+      })
+    })
+
+    it('should validate form before submitting return transaction', async () => {
+      const user = userEvent.setup()
+      mockIsConnected.mockResolvedValue(true)
+      render(<Home />)
+      
+      await waitFor(() => {
+        expect(screen.getByText('⤵ I Took It Back')).toBeInTheDocument()
+      })
+      
+      const takeBackButton = screen.getByText('⤵ I Took It Back')
+      
+      // Try to submit with empty item name
+      await user.click(takeBackButton)
+      
+      expect(screen.getByText('❌ Please enter item name')).toBeInTheDocument()
+      expect(mockUndefineBorrower).not.toHaveBeenCalled()
+      
+      // Fill item name
+      const itemNameInput = screen.getByLabelText('Item Name')
+      await user.type(itemNameInput, 'Test Item')
+      await user.click(takeBackButton)
+      
+      await waitFor(() => {
+        expect(mockUndefineBorrower).toHaveBeenCalled()
+      })
+    })
+  })
+})
