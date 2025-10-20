@@ -163,7 +163,7 @@ export default function Home() {
       {/* Header */}
       <header className="p-6 flex justify-between items-center backdrop-blur-sm bg-white/5 border-b border-white/10">
         <div>
-          <h1 className="text-3xl font-bold text-white">DeFinition</h1>
+          <h1 className="text-3xl font-bold text-white">TxLend</h1>
           <p className="text-purple-300 text-sm">Lending Tracker • Stellar Soroban</p>
         </div>
         <div>
@@ -336,8 +336,7 @@ export default function Home() {
             {/* Info Box */}
             <div className="bg-blue-500/10 backdrop-blur-md rounded-xl p-4 border border-blue-500/30">
               <p className="text-sm text-blue-200">
-                ℹ️ <strong>Write-Only Proof System:</strong> Her işlem Stellar blockchain'e kaydedilir ve 
-                Transaction Hash ile kanıtlanabilir. Sadece yazma işlemleri (define/undefine) desteklenir.
+                ℹ️ <strong>Write-Only Proof System:</strong> Every transaction is recorded on the Stellar blockchain and can be proven with a Transaction Hash. Only write operations (define/undefine) are supported.
               </p>
             </div>
           </div>

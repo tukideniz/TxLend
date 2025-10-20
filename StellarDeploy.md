@@ -2,7 +2,7 @@ Elbette! Aşağıda verdiğin içeriği sade, okunabilir ve yapılandırılmış
 
 ---
 
-# 2. Deploy to Testnet
+# TxLend - Deploy to Testnet
 
 ## Setup Özeti
 

@@ -4,7 +4,7 @@
 
 ## 🎯 Temel Başlıklar
 
-* **Proje Adı:** DeFinition
+* **Proje Adı:** TxLend
 * **Tür:** Basit Blockchain Uygulaması
 * **Platform:** Stellar Soroban
 * **Hedef:** Basic frontend + basit contract entegrasyonu + testnet deployment
@@ -12,7 +12,7 @@
 
 ## 🎯 Proje Özeti: Projede basic ve karmaşık yapılı olmayan bir frontend yapılacak, daha sonrasında 2-3 fonksiyondan oluşan basit bir smart contract yazılacak ve bu hatasız şekilde frontende entegre edilecek. Bu sırada projenin modern bir görünüme sahip olması da önemli!
 
-## 🚀 Kısaca Projenizi Anlatın:  DeFinition, Stellar Soroban'ın güvenli veri kaydı gücünü kullanarak, finansal işlemlerin ötesinde bir ihtiyaca odaklanan minimalist bir dApp'tir. Projenin amacı, günlük hayatta ödünç verilen küçük eşyaların (kitap, alet vb.) anlık sorumluluk tanımını inkar edilemez bir şekilde kaydetmektir. Basit bir arayüz ile kullanıcılar, bir eşyayı kime ödünç verdiklerini (o eşyanın yeni sorumlusunu) cüzdan adresiyle kaydeder ve eşya geri geldiğinde bu tanımı kaldırır. Bu minimal dApp, sadece 3 temel fonksiyon ve Freighter Wallet entegrasyonu kullanarak, 'Kimdeydi bu?' belirsizliğini ortadan kaldırır ve blockchain'in bir güven ve sorumluluk defteri olarak nasıl kullanılabileceğini sade bir şekilde kanıtlar.Ayrica ''Ben birine bir şey vermemiş olsam bile, başkası benim adıma kayıt yapabilir mi?'' riskini require auth mekanizması kullanarak cozmus oldum. define borrower fonksiyonunu sadece ödünç verenin (lender_address) kendi Freighter cüzdanı ile imzalayarak çağırabilmesini zorunlu kıldım. Bu sayede, sistem inkâr edilemez bir sorumluluk tanımı sunar: Kaydı yapan kişi, kontrat düzeyinde yetkilendirilmiştir ve bu da kimin, hangi eşya için, hangi tanımı yaptığını kesinleştirir."
+## 🚀 Kısaca Projenizi Anlatın:  TxLend, Stellar Soroban'ın güvenli veri kaydı gücünü kullanarak, finansal işlemlerin ötesinde bir ihtiyaca odaklanan minimalist bir dApp'tir. Projenin amacı, günlük hayatta ödünç verilen küçük eşyaların (kitap, alet vb.) anlık sorumluluk tanımını inkar edilemez bir şekilde kaydetmektir. Basit bir arayüz ile kullanıcılar, bir eşyayı kime ödünç verdiklerini (o eşyanın yeni sorumlusunu) cüzdan adresiyle kaydeder ve eşya geri geldiğinde bu tanımı kaldırır. Bu minimal dApp, sadece 3 temel fonksiyon ve Freighter Wallet entegrasyonu kullanarak, 'Kimdeydi bu?' belirsizliğini ortadan kaldırır ve blockchain'in bir güven ve sorumluluk defteri olarak nasıl kullanılabileceğini sade bir şekilde kanıtlar.Ayrica ''Ben birine bir şey vermemiş olsam bile, başkası benim adıma kayıt yapabilir mi?'' riskini require auth mekanizması kullanarak cozmus oldum. define borrower fonksiyonunu sadece ödünç verenin (lender_address) kendi Freighter cüzdanı ile imzalayarak çağırabilmesini zorunlu kıldım. Bu sayede, sistem inkâr edilemez bir sorumluluk tanımı sunar: Kaydı yapan kişi, kontrat düzeyinde yetkilendirilmiştir ve bu da kimin, hangi eşya için, hangi tanımı yaptığını kesinleştirir."
 
 ## 📋 Problem Tanımı
 
