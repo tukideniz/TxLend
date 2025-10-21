@@ -1,6 +1,7 @@
 # TxLend - Blockchain-Based Item Tracking dApp
 
 ![TxLend Banner](src/app/txlend_banner.png)
+**Live Demo:** [https://txlend.netlify.app](https://txlend.netlify.app) - Try TxLend dApp live on Netlify
 
 ## 📋 Project Details
 
