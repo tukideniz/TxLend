@@ -11,7 +11,7 @@ TxLend is a minimalist Stellar Soroban dApp that leverages the secure data recor
 
 **Key Innovation:** The app uses a `require auth` mechanism ensuring only the actual lender can create records, preventing unauthorized entries. This creates an undeniable responsibility record at the contract level, making it impossible for someone else to create false lending records on your behalf.
 
-**Minimalist Approach:** With just 3 core functions and Freighter Wallet integration, TxLend demonstrates how blockchain can serve as a trust and responsibility ledger in the simplest, most elegant way possible.
+**Minimalist Approach:** With just 2 core functions and Freighter Wallet integration, TxLend demonstrates how blockchain can serve as a trust and responsibility ledger in the simplest, most elegant way possible.
 
 ## 🎯 Vision
 
