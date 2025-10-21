@@ -1,6 +1,6 @@
 # TxLend - Blockchain-Based Item Tracking dApp
 
-![TxLend Logo](src/app/icon.png)
+![TxLend Banner](src/app/txlend_banner.png)
 
 ## 📋 Project Details
 
@@ -27,7 +27,7 @@ TxLend represents my philosophy of "blockchain for everyone" - creating solution
 ## 🛠️ Software Development Plan
 
 ### Phase 1: Smart Contract Development
-- **Step 1:** Design and implement core smart contract functions (`define_borrower`, `undefine_borrower`, `get_borrower`)
+- **Step 1:** Design and implement core smart contract functions (`define_borrower`, `undefine_borrower`)
 - **Step 2:** Implement `require auth` mechanism for security and add input validation
 - **Step 3:** Deploy and test smart contract on Stellar Testnet
 
@@ -161,7 +161,6 @@ When the borrower returns your item:
 ### Smart Contract Functions
 - `define_borrower`: Records who has borrowed an item
 - `undefine_borrower`: Removes borrower record when item is returned
-- `get_borrower`: Retrieves current borrower information
 
 ### Network
 - **Testnet**: Stellar Testnet (for development)
